@@ -375,15 +375,6 @@ $(document).ready(function() {
       container: '#bpmnCanvas',
       keyboard: {
         bindTo: window
-      },
-      additionalModules: [
-        BpmnPropertiesPanelModule
-      ],
-      propertiesPanel: {
-        parent: '#propertiesPanel'
-      },
-      moddleExtensions: {
-        camunda: camundaModdleDescriptor
       }
     });
     

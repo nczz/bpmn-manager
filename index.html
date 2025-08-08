@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.6.2/dist/assets/bpmn-js.css">
     <link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.6.2/dist/assets/diagram-js.css">
     <link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.6.2/dist/assets/bpmn-font/css/bpmn.css">
-    <link rel="stylesheet" href="https://unpkg.com/bpmn-js-properties-panel@1.23.0/dist/assets/bpmn-js-properties-panel.css">
     <!-- Custom CSS -->
     <style>
         /* 全局樣式 */
@@ -567,18 +566,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- BPMN-JS -->
     <script src="https://unpkg.com/bpmn-js@11.5.0/dist/bpmn-modeler.development.js"></script>
-    <!-- BPMN-JS Properties Panel -->
-    <script src="https://unpkg.com/bpmn-js-properties-panel@1.23.0/dist/bpmn-js-properties-panel.umd.js"></script>
-    <!-- Camunda BPMN Moddle -->
-    <script src="https://unpkg.com/camunda-bpmn-moddle@6.1.2/dist/camunda-bpmn-moddle.umd.js"></script>
-    <!-- 確保全局變量可用 -->
-    <script>
-    // BPMN-JS模組
-    var BpmnPropertiesPanelModule = window.BpmnJSPropertiesPanel;
-    var BpmnPropertiesProviderModule = window.BpmnJSPropertiesPanel.BpmnPropertiesProvider;
-    var CamundaPropertiesProviderModule = window.BpmnJSPropertiesPanel.CamundaPropertiesProvider;
-    var camundaModdleDescriptor = window.CamundaBpmnModdle;
-    </script>
+    <!-- 應用程序初始化 -->
     <!-- 應用程序主要JavaScript -->
     <script src="app.js"></script>
 </body>
