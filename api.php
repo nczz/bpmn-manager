@@ -38,10 +38,10 @@ function mxp_save_error_log($message) {
 	file_put_contents('php://stderr', $logEntry);
 }
 
-// 設置數據庫目錄
+// 設置資料庫目錄
 $DB_DIR = __DIR__ . '/database';
 
-// 確保數據庫目錄存在
+// 確保資料庫目錄存在
 if (!file_exists($DB_DIR)) {
 	mkdir($DB_DIR, 0755, true);
 }
@@ -103,16 +103,16 @@ if ($method === 'GET') {
 }
 
 /**
- * 取得數據庫連接
- * @return PDO 數據庫連接
+ * 取得資料庫連接
+ * @return PDO 資料庫連接
  */
 function getDBConnection() {
 	global $DB_DIR;
 
-	// 尋找數據庫文件
+	// 尋找資料庫文件
 	$dbFile = findDatabaseFile($DB_DIR);
 
-	// 如果找不到數據庫文件，則創建一個新的
+	// 如果找不到資料庫文件，則創建一個新的
 	if (!$dbFile) {
 		$dbFile = createNewDatabaseFile($DB_DIR);
 	}
@@ -129,9 +129,9 @@ function getDBConnection() {
 }
 
 /**
- * 尋找數據庫文件
- * @param string $dir 數據庫目錄
- * @return string|null 數據庫文件路徑或null
+ * 尋找資料庫文件
+ * @param string $dir 資料庫目錄
+ * @return string|null 資料庫文件路徑或null
  */
 function findDatabaseFile($dir) {
 	// 掃描目錄中的所有文件
@@ -143,7 +143,7 @@ function findDatabaseFile($dir) {
 			continue;
 		}
 
-		// 檢查文件是否為SQLite數據庫
+		// 檢查文件是否為SQLite資料庫
 		$filePath = $dir . '/' . $file;
 		if (is_file($filePath) && pathinfo($filePath, PATHINFO_EXTENSION) === 'sqlite') {
 			return $filePath;
@@ -154,16 +154,16 @@ function findDatabaseFile($dir) {
 }
 
 /**
- * 創建新的數據庫文件
- * @param string $dir 數據庫目錄
- * @return string 新創建的數據庫文件路徑
+ * 創建新的資料庫文件
+ * @param string $dir 資料庫目錄
+ * @return string 新創建的資料庫文件路徑
  */
 function createNewDatabaseFile($dir) {
 	// 生成一個隨機的文件名
 	$randomString = bin2hex(random_bytes(16));
 	$dbFile = $dir . '/' . $randomString . '.sqlite';
 
-	// 創建數據庫連接
+	// 創建資料庫連接
 	$pdo = new PDO("sqlite:" . $dbFile);
 	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -243,7 +243,7 @@ function validateAuth() {
 	$logToken = substr($token, 0, 10) . '...';
 	mxp_save_error_log("Auth Attempt with token: $logToken");
 
-	// 獲取數據庫連接
+	// 獲取資料庫連接
 	$pdo = getDBConnection();
 
 	if (!$pdo) {
@@ -300,11 +300,11 @@ function handleLogin() {
 	$password = $_POST['password'];
 	$otp = isset($_POST['otp']) ? $_POST['otp'] : '';
 
-	// 獲取數據庫連接
+	// 獲取資料庫連接
 	$pdo = getDBConnection();
 
 	if (!$pdo) {
-		echo json_encode(array("success" => false, "message" => "無法連接數據庫"));
+		echo json_encode(array("success" => false, "message" => "無法連接資料庫"));
 		return;
 	}
 
@@ -356,7 +356,7 @@ function handleLogin() {
 		return;
 	}
 
-	// 返回成功信息和token
+	// 返回成功資訊和token
 	echo json_encode(array(
 		"success" => true,
 		"message" => "登入成功",
@@ -381,11 +381,11 @@ function handleLogout() {
 		return;
 	}
 
-	// 獲取數據庫連接
+	// 獲取資料庫連接
 	$pdo = getDBConnection();
 
 	if (!$pdo) {
-		echo json_encode(array("success" => false, "message" => "無法連接數據庫"));
+		echo json_encode(array("success" => false, "message" => "無法連接資料庫"));
 		return;
 	}
 
@@ -398,7 +398,7 @@ function handleLogout() {
 		return;
 	}
 
-	// 返回成功信息
+	// 返回成功資訊
 	echo json_encode(array("success" => true, "message" => "登出成功"));
 }
 
@@ -418,11 +418,11 @@ function handleVerifyToken() {
 		return;
 	}
 
-	// 獲取數據庫連接
+	// 獲取資料庫連接
 	$pdo = getDBConnection();
 
 	if (!$pdo) {
-		echo json_encode(array("success" => false, "message" => "無法連接數據庫"));
+		echo json_encode(array("success" => false, "message" => "無法連接資料庫"));
 		return;
 	}
 
@@ -446,7 +446,7 @@ function handleVerifyToken() {
 		return;
 	}
 
-	// 返回成功信息
+	// 返回成功資訊
 	echo json_encode(array("success" => true, "message" => "token有效"));
 }
 
@@ -461,15 +461,15 @@ function handleGetAccountInfo() {
 		return;
 	}
 
-	// 獲取數據庫連接
+	// 獲取資料庫連接
 	$pdo = getDBConnection();
 
 	if (!$pdo) {
-		echo json_encode(array("success" => false, "message" => "無法連接數據庫"));
+		echo json_encode(array("success" => false, "message" => "無法連接資料庫"));
 		return;
 	}
 
-	// 查詢用戶信息
+	// 查詢使用者資訊
 	$stmt = $pdo->prepare("SELECT id, username, two_fa_enabled, created_at, updated_at FROM users WHERE id = :id");
 	$stmt->bindParam(':id', $user_id);
 	$stmt->execute();
@@ -478,11 +478,11 @@ function handleGetAccountInfo() {
 
 	// 如果找不到用戶，則返回錯誤
 	if (!$user) {
-		echo json_encode(array("success" => false, "message" => "獲取用戶信息失敗"));
+		echo json_encode(array("success" => false, "message" => "獲取使用者資訊失敗"));
 		return;
 	}
 
-	// 返回用戶信息
+	// 返回使用者資訊
 	echo json_encode(array(
 		"success" => true,
 		"user" => $user,
@@ -500,15 +500,15 @@ function handleGet2FASetup() {
 		return;
 	}
 
-	// 獲取數據庫連接
+	// 獲取資料庫連接
 	$pdo = getDBConnection();
 
 	if (!$pdo) {
-		echo json_encode(array("success" => false, "message" => "無法連接數據庫"));
+		echo json_encode(array("success" => false, "message" => "無法連接資料庫"));
 		return;
 	}
 
-	// 查詢用戶信息
+	// 查詢使用者資訊
 	$stmt = $pdo->prepare("SELECT id, username, two_fa_enabled FROM users WHERE id = :id");
 	$stmt->bindParam(':id', $user_id);
 	$stmt->execute();
@@ -517,7 +517,7 @@ function handleGet2FASetup() {
 
 	// 如果找不到用戶，則返回錯誤
 	if (!$user) {
-		echo json_encode(array("success" => false, "message" => "獲取用戶信息失敗"));
+		echo json_encode(array("success" => false, "message" => "獲取使用者資訊失敗"));
 		return;
 	}
 
@@ -543,7 +543,7 @@ function handleGet2FASetup() {
 	// 模擬生成QR Code URL（實際應用中請使用真實的2FA庫）
 	$qrCodeUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABO1BMVEUAAACBw/9/wv+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/+Aw/8AAADI7s9TAAAAaHRSTlMAEEBggK/P3+//YDDfQN+AYBDPr4Ag38+fr2AQ79/PQCCAMGCvEECA38/vr2BAMN+AIO+vn88w34BgQBCvgN/v78/fr69AMCCvYJ/fz4AQn0DvMGCfII/v39+AUIBAcJ9wMJ9Qj3BQcHDC2gwAAAABYktHRAH/Ai3eAAAAB3RJTUUH5gIHCTkqIWgm+wAAAWxJREFUeNrt0jVWBQEQRMH5HuYEd3d319bR+08RAjaQurupL5DXAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/3Y0eqR3YXRiqPg5NT0zmxSVtedyFYBa6f9Wf6H0f2t4qfB/any58n+a9Xrp/9TgSuX/1OpG6f/U1nbl/9Tu3lLp/9T+wf5i5f/U0f5O7f+wsTl/Wvo/nZ9fnJX+T5dX1xel/9PO7d1t6f90//D4UPo/vT5N35f+T5/TL5+l/9P318d36f/0c7H7+yv9n86OD89K/6eTs/PT0v9pZ3fvtvR/unh+eS79n96+Nj9K/6fxo/Hj0v9pfG58ofR/Gl4ZXir9n8YXNYZL/6extfFa6f80tjFW+j+N7C6U/k8ju0ul/1N7p7VT+j+1dlv7pf9TY7+pUfo/NQ+aB6X/U+Oocar0f2qaapop/Z+a55rnS/+nxoXGhdL/qX2+fb70f2qbbZst/Q8AAAAAAAAAAAAAAAAAACzhH6bWb/KxvB1HAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIyLTAyLTA3VDA5OjU3OjQyKzAwOjAwgp5H1QAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMi0wMi0wN1QwOTo1Nzo0MiswMDowMPPD/2kAAAAASUVORK5CYII=";
 
-	// 返回2FA設置信息
+	// 返回2FA設置資訊
 	echo json_encode(array(
 		"success" => true,
 		"qrCodeUrl" => $qrCodeUrl,
@@ -570,15 +570,15 @@ function handleUpdateAccount() {
 
 	$current_password = $_POST['current_password'];
 
-	// 獲取數據庫連接
+	// 獲取資料庫連接
 	$pdo = getDBConnection();
 
 	if (!$pdo) {
-		echo json_encode(array("success" => false, "message" => "無法連接數據庫"));
+		echo json_encode(array("success" => false, "message" => "無法連接資料庫"));
 		return;
 	}
 
-	// 查詢用戶信息
+	// 查詢使用者資訊
 	$stmt = $pdo->prepare("SELECT * FROM users WHERE id = :id");
 	$stmt->bindParam(':id', $user_id);
 	$stmt->execute();
@@ -587,7 +587,7 @@ function handleUpdateAccount() {
 
 	// 如果找不到用戶，則返回錯誤
 	if (!$user) {
-		echo json_encode(array("success" => false, "message" => "獲取用戶信息失敗"));
+		echo json_encode(array("success" => false, "message" => "獲取使用者資訊失敗"));
 		return;
 	}
 
@@ -653,7 +653,7 @@ function handleUpdateAccount() {
 		}
 	}
 
-	// 更新用戶信息
+	// 更新使用者資訊
 	$stmt = $pdo->prepare("UPDATE users SET
                            username = :username,
                            password = :password,
@@ -669,12 +669,12 @@ function handleUpdateAccount() {
 	$stmt->bindParam(':id', $user_id);
 
 	if (!$stmt->execute()) {
-		echo json_encode(array("success" => false, "message" => "更新用戶信息失敗"));
+		echo json_encode(array("success" => false, "message" => "更新使用者資訊失敗"));
 		return;
 	}
 
-	// 返回成功信息
-	echo json_encode(array("success" => true, "message" => "用戶信息已更新"));
+	// 返回成功資訊
+	echo json_encode(array("success" => true, "message" => "使用者資訊已更新"));
 }
 
 /**
@@ -697,11 +697,11 @@ function handleListDiagrams() {
 	// 記錄請求數據用於調試
 	mxp_save_error_log("List Diagrams - User ID: $user_id");
 
-	// 獲取數據庫連接
+	// 獲取資料庫連接
 	$pdo = getDBConnection();
 
 	if (!$pdo) {
-		echo json_encode(array("success" => false, "message" => "無法連接數據庫"));
+		echo json_encode(array("success" => false, "message" => "無法連接資料庫"));
 		return;
 	}
 
@@ -725,7 +725,7 @@ function handleListDiagrams() {
 		));
 	} catch (PDOException $e) {
 		mxp_save_error_log("Database error in handleListDiagrams: " . $e->getMessage());
-		echo json_encode(array("success" => false, "message" => "獲取流程圖列表時發生數據庫錯誤"));
+		echo json_encode(array("success" => false, "message" => "獲取流程圖列表時發生資料庫錯誤"));
 	}
 }
 
@@ -751,11 +751,11 @@ function handleGetDiagram() {
 	// 記錄請求數據用於調試
 	mxp_save_error_log("Get Diagram - User ID: $user_id, Diagram ID: $id");
 
-	// 獲取數據庫連接
+	// 獲取資料庫連接
 	$pdo = getDBConnection();
 
 	if (!$pdo) {
-		echo json_encode(array("success" => false, "message" => "無法連接數據庫"));
+		echo json_encode(array("success" => false, "message" => "無法連接資料庫"));
 		return;
 	}
 
@@ -778,14 +778,14 @@ function handleGetDiagram() {
 			return;
 		}
 
-		// 返回流程圖信息
+		// 返回流程圖資訊
 		echo json_encode(array(
 			"success" => true,
 			"diagram" => $diagram,
 		));
 	} catch (PDOException $e) {
 		mxp_save_error_log("Database error in handleGetDiagram: " . $e->getMessage());
-		echo json_encode(array("success" => false, "message" => "獲取流程圖時發生數據庫錯誤"));
+		echo json_encode(array("success" => false, "message" => "獲取流程圖時發生資料庫錯誤"));
 	}
 }
 
@@ -850,11 +850,11 @@ function handleSaveDiagram() {
 	// 記錄請求數據用於調試
 	mxp_save_error_log("Save Diagram - Mode: $save_mode, User ID: $user_id, Diagram ID: " . ($id !== null ? $id : 'new') . ", Name: $name");
 
-	// 獲取數據庫連接
+	// 獲取資料庫連接
 	$pdo = getDBConnection();
 
 	if (!$pdo) {
-		echo json_encode(array("success" => false, "message" => "無法連接數據庫"));
+		echo json_encode(array("success" => false, "message" => "無法連接資料庫"));
 		return;
 	}
 
@@ -866,7 +866,7 @@ function handleSaveDiagram() {
 		$userDiagrams = $userDiagramsStmt->fetchAll(PDO::FETCH_ASSOC);
 		mxp_save_error_log("User's diagrams (user_id=$user_id): " . json_encode($userDiagrams));
 
-		// 記錄當前數據庫統計信息用於調試
+		// 記錄當前資料庫統計資訊用於調試
 		$statsStmt = $pdo->query("SELECT COUNT(*) as total, COUNT(DISTINCT user_id) as users FROM diagrams");
 		$stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
 		mxp_save_error_log("Database stats: Total diagrams: {$stats['total']}, Total users: {$stats['users']}");
@@ -983,7 +983,7 @@ function handleSaveDiagram() {
 					mxp_save_error_log("Successfully updated diagram ID: $id for user: $user_id, rows affected: $rowsUpdated");
 				}
 
-				// 返回成功信息，即使rowCount=0（可能是內容沒有變化）
+				// 返回成功資訊，即使rowCount=0（可能是內容沒有變化）
 				echo json_encode(array(
 					"success" => true,
 					"message" => "流程圖已更新",
@@ -1037,7 +1037,7 @@ function handleSaveDiagram() {
 
 			mxp_save_error_log("New diagram created with ID: $new_id for user: $user_id");
 
-			// 返回成功信息
+			// 返回成功資訊
 			$message = ($save_mode === 'saveAs') ? "流程圖已另存為新檔" : "流程圖已創建";
 			echo json_encode(array(
 				"success" => true,
@@ -1052,7 +1052,7 @@ function handleSaveDiagram() {
 		echo json_encode(array("success" => false, "message" => "未知的處理錯誤"));
 	} catch (PDOException $e) {
 		mxp_save_error_log("PDO Exception in handleSaveDiagram: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
-		echo json_encode(array("success" => false, "message" => "處理流程圖時發生數據庫錯誤: " . $e->getMessage()));
+		echo json_encode(array("success" => false, "message" => "處理流程圖時發生資料庫錯誤: " . $e->getMessage()));
 	} catch (Exception $e) {
 		mxp_save_error_log("General Exception in handleSaveDiagram: " . $e->getMessage() . "\nTrace: " . $e->getTraceAsString());
 		echo json_encode(array("success" => false, "message" => "處理流程圖時發生錯誤: " . $e->getMessage()));
@@ -1079,11 +1079,11 @@ function handleRenameDiagram() {
 	$id = $_POST['id'];
 	$name = $_POST['name'];
 
-	// 獲取數據庫連接
+	// 獲取資料庫連接
 	$pdo = getDBConnection();
 
 	if (!$pdo) {
-		echo json_encode(array("success" => false, "message" => "無法連接數據庫"));
+		echo json_encode(array("success" => false, "message" => "無法連接資料庫"));
 		return;
 	}
 
@@ -1102,7 +1102,7 @@ function handleRenameDiagram() {
 		return;
 	}
 
-	// 返回成功信息
+	// 返回成功資訊
 	echo json_encode(array(
 		"success" => true,
 		"message" => "流程圖已重命名",
@@ -1128,11 +1128,11 @@ function handleDeleteDiagram() {
 
 	$id = $_POST['id'];
 
-	// 獲取數據庫連接
+	// 獲取資料庫連接
 	$pdo = getDBConnection();
 
 	if (!$pdo) {
-		echo json_encode(array("success" => false, "message" => "無法連接數據庫"));
+		echo json_encode(array("success" => false, "message" => "無法連接資料庫"));
 		return;
 	}
 
@@ -1148,7 +1148,7 @@ function handleDeleteDiagram() {
 		return;
 	}
 
-	// 返回成功信息
+	// 返回成功資訊
 	echo json_encode(array(
 		"success" => true,
 		"message" => "流程圖已刪除",
