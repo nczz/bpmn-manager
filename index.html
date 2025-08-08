@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPMN流程圖管理工具</title>
+    <!-- Bootstrap CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- BPMN-JS required styles -->
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.6.2/dist/assets/bpmn-js.css">
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.6.2/dist/assets/diagram-js.css">
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@18.6.2/dist/assets/bpmn-font/css/bpmn.css">
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js-properties-panel@1.23.0/dist/assets/bpmn-js-properties-panel.css">
+    <!-- Custom CSS -->
+    <style>
+        /* 全局樣式 */
+    body {
+      font-family: 'Microsoft JhengHei', Arial, sans-serif;
+      background-color: #fafafa;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    /* 按鈕高亮動畫 */
+    .btn-highlight {
+      animation: button-pulse 1s infinite alternate;
+      box-shadow: 0 0 8px #007bff;
+      background-color: #e8f3ff;
+      font-weight: bold;
+    }
+    
+    @keyframes button-pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.05); }
+    }
+
+    /* App 結構 */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* 登入頁面 */
+    #loginPage {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f8f9fa;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    /* 編輯器頁面 */
+    #editorPage {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* 工具欄 */
+    .toolbar {
+      height: 50px;
+      background-color: #fafafa;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 15px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      z-index: 100;
+    }
+
+    .toolbar-left, .toolbar-right {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-right: 20px;
+      color: #444;
+    }
+
+    .tool-group {
+      display: flex;
+      gap: 5px;
+    }
+
+    .tool-btn {
+      background: none;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #555;
+      transition: all 0.2s ease;
+    }
+
+    .tool-btn:hover {
+      background-color: #e9e9e9;
+      color: #333;
+    }
+
+    .tool-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .tool-btn:disabled:hover {
+      background-color: transparent;
+      color: #555;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #currentUsername {
+      color: #666;
+    }
+
+    /* 主要內容區域 */
+    .content {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .main-content {
+      flex: 1;
+      position: relative;
+    }
+
+    .side-panel {
+      width: 300px;
+      border-left: 1px solid #e0e0e0;
+      background-color: #fafafa;
+      overflow-y: auto;
+    }
+
+    /* BPMN編輯器樣式 */
+    #bpmnCanvas {
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-color: #fff;
+    }
+
+    /* 屬性面板樣式 */
+    #propertiesPanel {
+      height: 100%;
+      width: 100%;
+      background-color: #f8f9fa;
+      overflow-y: auto;
+    }
+
+    /* 浮動面板 */
+    .floating-panel {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      max-width: 90vw;
+      max-height: 80vh;
+      background-color: white;
+      border-radius: 6px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      border-bottom: 1px solid #e0e0e0;
+      background-color: #f8f9fa;
+    }
+
+    .panel-header h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: #333;
+    }
+
+    .panel-body {
+      padding: 20px;
+      overflow-y: auto;
+      max-height: calc(80vh - 60px);
+    }
+
+    /* 通知提示系統 */
+    .notification-container {
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      z-index: 9999;
+      max-width: 350px;
+    }
+
+    .notification {
+      background-color: white;
+      border-left: 4px solid #4caf50;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 4px;
+      padding: 15px 20px;
+      margin-bottom: 10px;
+      animation: slide-in 0.3s ease-out;
+      display: flex;
+      align-items: center;
+    }
+
+    .notification-success {
+      border-left-color: #4caf50;
+    }
+
+    .notification-error {
+      border-left-color: #f44336;
+    }
+
+    .notification-warning {
+      border-left-color: #ff9800;
+    }
+
+    .notification-info {
+      border-left-color: #2196f3;
+    }
+
+    .notification-icon {
+      margin-right: 15px;
+      font-size: 1.2rem;
+    }
+
+    .notification-content {
+      flex: 1;
+    }
+
+    .notification-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .notification-message {
+      color: #666;
+    }
+
+    .notification-close {
+      font-size: 1.2rem;
+      color: #999;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    @keyframes slide-in {
+      0% {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* 文件上傳區域 */
+    .drop-zone {
+      border: 2px dashed #ccc;
+      border-radius: 5px;
+      padding: 25px;
+      text-align: center;
+      background-color: #f8f9fa;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .drop-zone:hover {
+      background-color: #f1f1f1;
+    }
+
+    .drop-zone.active {
+      border-color: #007bff;
+      background-color: #e9f7fe;
+    }
+
+    .drop-zone-text {
+      color: #666;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .drop-zone-input {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- 登入頁面 -->
+        <div id="loginPage">
+            <div class="card login-card">
+                <div class="card-header text-center">
+                    <h3>BPMN流程圖管理工具</h3>
+                    <h4>登入系統</h4>
+                </div>
+                <div class="card-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">帳號</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">密碼</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <!-- <div class="mb-3">
+                            <label for="otp" class="form-label">OTP 驗證碼 (若已啟用)</label>
+                            <input type="text" class="form-control" id="otp" name="otp">
+                        </div> -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">登入</button>
+                        </div>
+                    </form>
+                    <div class="alert alert-danger mt-3 d-none" id="loginError"></div>
+                </div>
+                <div class="card-footer text-center">
+                    <small>初次使用請以 admin/admin 登入</small>
+                </div>
+            </div>
+        </div>
+        <!-- 編輯器頁面 -->
+        <div id="editorPage">
+            <!-- 編輯器工具欄 -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <div class="logo">
+                        <span>BPMN流程圖管理工具</span>
+                    </div>
+                    <div class="tool-group">
+                        <!-- 文件操作 -->
+                        <button id="btnNewDiagram" class="tool-btn" title="新建流程圖">
+                            <i class="bi bi-file-earmark-plus"></i>
+                        </button>
+                        <button id="btnSaveDiagram" class="tool-btn" title="儲存流程圖 (更新現有記錄)">
+                            <i class="bi bi-save"></i> 儲存
+                        </button>
+                        <button id="btnSaveAsDiagram" class="tool-btn" title="另存新檔 (創建新記錄)">
+                            <i class="bi bi-save-fill"></i> 另存新檔
+                        </button>
+                        <button id="btnOpenDiagrams" class="tool-btn" title="開啟已儲存的流程圖">
+                            <i class="bi bi-folder2-open"></i>
+                        </button>
+                        <div class="dropdown d-inline-block">
+                            <button class="tool-btn dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="導出">
+                                <i class="bi bi-download"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                                <li><a class="dropdown-item" href="#" id="exportSVG">SVG格式</a></li>
+                                <li><a class="dropdown-item" href="#" id="exportPNG">PNG格式</a></li>
+                                <li><a class="dropdown-item" href="#" id="exportXML">BPMN XML</a></li>
+                            </ul>
+                        </div>
+                        <button id="btnImportDiagram" class="tool-btn" title="匯入流程圖">
+                            <i class="bi bi-upload"></i>
+                        </button>
+                    </div>
+                    <div class="tool-group ms-3">
+                        <!-- 編輯操作 -->
+                        <button id="btnUndo" class="tool-btn" title="撤銷">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </button>
+                        <button id="btnRedo" class="tool-btn" title="重做">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                    <div class="tool-group ms-3">
+                        <!-- 縮放控制 -->
+                        <button id="btnZoomIn" class="tool-btn" title="放大">
+                            <i class="bi bi-zoom-in"></i>
+                        </button>
+                        <button id="btnZoomOut" class="tool-btn" title="縮小">
+                            <i class="bi bi-zoom-out"></i>
+                        </button>
+                        <button id="btnZoomReset" class="tool-btn" title="重置縮放">
+                            <i class="bi bi-aspect-ratio"></i>
+                        </button>
+                        <button id="btnFitViewport" class="tool-btn" title="適應視窗">
+                            <i class="bi bi-arrows-fullscreen"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <div class="user-info">
+                        <span id="currentUsername"></span>
+                        <div class="dropdown">
+                            <button class="tool-btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="#" id="navAccount">帳號設定</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item" href="#" id="navLogout">登出</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- BPMN編輯器主畫面 -->
+            <div class="content">
+                <div class="main-content">
+                    <div id="bpmnCanvas"></div>
+                </div>
+                <!-- <div class="side-panel">
+    <div id="propertiesPanel"></div>
+</div> -->
+            </div>
+        </div>
+        <!-- 浮動面板 - 流程圖列表 -->
+        <div class="floating-panel" id="diagramsPanel">
+            <div class="panel-header">
+                <h3>已儲存的流程圖</h3>
+                <button class="btn-close" id="closeDiagramsPanel"></button>
+            </div>
+            <div class="panel-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>名稱</th>
+                                <th>最後修改日期</th>
+                                <th>動作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="diagramsList">
+                            <!-- 流程圖列表將由JS動態生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- 浮動面板 - 帳號設定 -->
+        <div class="floating-panel" id="accountPanel">
+            <div class="panel-header">
+                <h3>帳號設定</h3>
+                <button class="btn-close" id="closeAccountPanel"></button>
+            </div>
+            <div class="panel-body">
+                <form id="accountForm">
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">當前密碼</label>
+                        <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                        <small class="form-text text-muted">更改設定時需要輸入當前密碼進行驗證</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newUsername" class="form-label">新帳號</label>
+                        <input type="text" class="form-control" id="newUsername" name="newUsername">
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">新密碼</label>
+                        <input type="password" class="form-control" id="newPassword" name="newPassword">
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">確認新密碼</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword">
+                    </div>
+                    <!-- <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="enable2FA" name="enable2FA">
+                        <label class="form-check-label" for="enable2FA">啟用 2FA OTP 驗證</label>
+                    </div>
+                    <div id="otpSetupArea" class="mb-3 d-none">
+                        <div class="mb-3">
+                            <label class="form-label">QR Code</label>
+                            <div id="qrCodeContainer" class="text-center p-3 border rounded"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="otpVerify" class="form-label">輸入 OTP 驗證碼以確認設定</label>
+                            <input type="text" class="form-control" id="otpVerify" name="otpVerify">
+                        </div>
+                    </div> -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">儲存設定</button>
+                    </div>
+                </form>
+                <div class="alert alert-success mt-3 d-none" id="accountSuccess"></div>
+                <div class="alert alert-danger mt-3 d-none" id="accountError"></div>
+            </div>
+        </div>
+        <!-- 儲存流程圖對話框 -->
+        <div class="floating-panel" id="saveDiagramModal" style="max-width: 500px;">
+            <div class="panel-header">
+                <h3 id="saveDiagramTitle">儲存流程圖</h3>
+                <button class="btn-close" id="closeSaveDiagramModal"></button>
+            </div>
+            <div class="panel-body">
+                <form id="saveDiagramForm">
+                    <div class="mb-3">
+                        <label for="diagramName" class="form-label">流程圖名稱</label>
+                        <input type="text" class="form-control" id="diagramName" name="diagramName" required>
+                    </div>
+                    <input type="hidden" id="diagramId" name="diagramId">
+                    <input type="hidden" id="saveMode" name="saveMode" value="save">
+                    <div class="mb-3" id="saveOptionsArea">
+                        <small class="text-muted" id="currentDiagramInfo"></small>
+                    </div>
+                    <div class="alert alert-info mb-3" id="saveOperationInfo" style="display:none;">
+                        <i class="bi bi-info-circle"></i> <span id="saveOperationInfoText"></span>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-secondary" id="cancelSaveDiagram">取消</button>
+                        <button type="button" class="btn btn-primary" id="btnSaveDiagramConfirm">儲存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- 匯入流程圖對話框 -->
+        <div class="floating-panel" id="importDiagramModal" style="max-width: 500px;">
+            <div class="panel-header">
+                <h3>匯入流程圖</h3>
+                <button class="btn-close" id="closeImportDiagramModal"></button>
+            </div>
+            <div class="panel-body">
+                <div class="drop-zone" id="fileDropZone">
+                    <div class="drop-zone-prompt">
+                        <i class="bi bi-cloud-upload fs-1 text-primary"></i>
+                        <p class="drop-zone-text">拖放 BPMN 文件到這裡或點擊上傳</p>
+                    </div>
+                    <input type="file" id="fileInput" class="drop-zone-input" accept=".bpmn,.xml">
+                </div>
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-secondary" id="cancelImportDiagram">取消</button>
+                </div>
+            </div>
+        </div>
+        <!-- 通知提示系統 -->
+        <div id="notificationSystem" class="notification-container">
+            <!-- 通知會動態添加到這裡 -->
+        </div>
+    </div>
+    <!-- 必要的JavaScript -->
+    <!-- jQuery -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- BPMN-JS -->
+    <script src="https://unpkg.com/bpmn-js@11.5.0/dist/bpmn-modeler.development.js"></script>
+    <!-- BPMN-JS Properties Panel -->
+    <script src="https://unpkg.com/bpmn-js-properties-panel@1.23.0/dist/bpmn-js-properties-panel.umd.js"></script>
+    <!-- Camunda BPMN Moddle -->
+    <script src="https://unpkg.com/camunda-bpmn-moddle@6.1.2/dist/camunda-bpmn-moddle.umd.js"></script>
+    <!-- 確保全局變量可用 -->
+    <script>
+    // BPMN-JS模組
+    var BpmnPropertiesPanelModule = window.BpmnJSPropertiesPanel;
+    var BpmnPropertiesProviderModule = window.BpmnJSPropertiesPanel.BpmnPropertiesProvider;
+    var CamundaPropertiesProviderModule = window.BpmnJSPropertiesPanel.CamundaPropertiesProvider;
+    var camundaModdleDescriptor = window.CamundaBpmnModdle;
+    </script>
+    <!-- 應用程序主要JavaScript -->
+    <script src="app.js"></script>
+</body>
+
+</html>

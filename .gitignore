@@ -1,0 +1,5 @@
+.DS_Store
+.claude/
+db_check.php
+debug.log
+database/*.sqlite
